@@ -1,0 +1,2 @@
+# Documentation for Frontend
+This directory contains the frontend code for the BandJ Agri Tech Smart Soil project. The frontend is built using React and communicates with the FastAPI backend to provide a seamless user experience.
