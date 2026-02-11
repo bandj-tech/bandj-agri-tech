@@ -16,7 +16,7 @@ import {
   Skeleton,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { getSoilTests, getSMSLogs, getFarmers } from "../api/mockApi";
+import { getSoilTests, getSMSLogs, getFarmers, getFarmerDevices } from "../api/mockApi";
 import DeviceRegistration from "./DeviceRegistration";
 import SoilTestDetail from "./SoilTestDetail";
 import SMSLogs from "./SMSLogs";
@@ -35,6 +35,11 @@ export default function FarmerDetail() {
   const { data: smsData, isLoading: smsLoading } = useQuery({
     queryKey: ["sms-logs", id],
     queryFn: () => getSMSLogs(id!),
+    enabled: !!id,
+  });
+  const { data: devicesData, isLoading: devicesLoading } = useQuery({
+    queryKey: ["devices", id],
+    queryFn: () => getFarmerDevices(id!),
     enabled: !!id,
   });
   const { data: farmersData } = useQuery({
@@ -90,6 +95,33 @@ export default function FarmerDetail() {
                 </IconButton>
               </Tooltip>
             </Stack>
+          </Paper>
+
+          <Paper sx={{ p: 2, mb: 2, border: "1px solid #eadfce", borderRadius: 2 }}>
+            <Typography variant="subtitle2">Devices</Typography>
+            <Box mt={1}>
+              {devicesLoading ? (
+                <Skeleton variant="rectangular" height={120} />
+              ) : devicesData?.devices?.length ? (
+                <Stack spacing={1}>
+                  {devicesData.devices.map((device) => (
+                    <Box key={device.id} sx={{ p: 1, border: "1px solid #e0e0e0", borderRadius: 1 }}>
+                      <Typography variant="body2">
+                        <strong>Device ID:</strong> {device.device_id}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>SIM Number:</strong> {device.sim_number}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Registered: {new Date(device.created_at).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Stack>
+              ) : (
+                <Typography color="text.secondary">No devices registered</Typography>
+              )}
+            </Box>
           </Paper>
 
           <Paper sx={{ p: 2, border: "1px solid #eadfce", borderRadius: 2 }}>

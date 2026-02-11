@@ -40,3 +40,7 @@ export async function getSMSLogs(farmerId: string): Promise<{ logs: SMSLog[] }> 
 export async function registerDevice(payload: { farmer_id: string; device_id: string; sim_number: string; }): Promise<{ device: Device; api_token: string }> {
   return request(`/api/admin/devices`, { method: "POST", body: JSON.stringify(payload) });
 }
+
+export async function getFarmerDevices(farmerId: string): Promise<{ devices: Device[] }> {
+  return request(`/api/admin/devices/${farmerId}`);
+}

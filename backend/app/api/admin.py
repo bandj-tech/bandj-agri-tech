@@ -62,6 +62,11 @@ async def register_device(device_data: DeviceCreate, db: Session = Depends(get_d
     if not farmer:
         raise HTTPException(status_code=404, detail="Farmer not found")
 
+    # Check if farmer already has a device
+    existing_device = db.query(Device).filter(Device.farmer_id == device_data.farmer_id).first()
+    if existing_device:
+        raise HTTPException(status_code=400, detail="Farmer already has a registered device")
+
     # Generate API token
     api_token = secrets.token_urlsafe(32)
 
@@ -83,6 +88,23 @@ async def register_device(device_data: DeviceCreate, db: Session = Depends(get_d
         "is_active": device.is_active,
         "created_at": device.created_at
     }, "api_token": api_token}
+
+@router.get("/devices/{farmer_id}")
+async def get_farmer_devices(farmer_id: str, db: Session = Depends(get_db)):
+    """Get all devices for a farmer"""
+    farmer = db.query(Farmer).filter(Farmer.id == farmer_id).first()
+    if not farmer:
+        raise HTTPException(status_code=404, detail="Farmer not found")
+
+    devices = db.query(Device).filter(Device.farmer_id == farmer_id).all()
+    return {"devices": [{
+        "id": d.id,
+        "device_id": d.device_id,
+        "sim_number": d.sim_number,
+        "farmer_id": d.farmer_id,
+        "is_active": d.is_active,
+        "created_at": d.created_at
+    } for d in devices]}
 
 @router.get("/soil-tests/{farmer_id}")
 async def get_farmer_tests(farmer_id: str, db: Session = Depends(get_db)):
