@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
@@ -47,3 +47,37 @@ class CropRecommendation(BaseModel):
 class RecommendationResponse(BaseModel):
     recommendations: List[CropRecommendation]
     summary: str
+
+class AdminRegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    registration_code: str
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value) < 8:
+            raise ValueError("Password must be at least 8 characters")
+        return value
+
+    @field_validator("registration_code")
+    @classmethod
+    def validate_registration_code(cls, value: str) -> str:
+        if len(value) != 6 or not value.isdigit():
+            raise ValueError("Registration code must be a 6-digit number")
+        return value
+
+class AdminLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+class AdminUserResponse(BaseModel):
+    id: str
+    email: EmailStr
+    is_active: bool
+    created_at: datetime
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: AdminUserResponse

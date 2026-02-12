@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import App from "./App";
 import NotificationProvider from "./contexts/NotificationProvider";
+import AuthProvider from "./contexts/AuthProvider";
 import theme from "./theme";
 import "./index.css";
 
@@ -16,9 +17,11 @@ createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <NotificationProvider>
-            <App />
-          </NotificationProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <App />
+            </NotificationProvider>
+          </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>

@@ -49,7 +49,7 @@ export type Farmer = {
   created_at?: string;
   };
   
-  export type SMSLog = {
+export type SMSLog = {
   id: string;
   farmer_id?: string;
   direction: "inbound" | "outbound";
@@ -59,3 +59,16 @@ export type Farmer = {
   telerivet_id?: string;
   created_at?: string;
   };
+
+export type AdminUser = {
+  id: string;
+  email: string;
+  is_active: boolean;
+  created_at: string;
+};
+
+export type AuthResponse = {
+  access_token: string;
+  token_type: "bearer";
+  user: AdminUser;
+};

@@ -22,6 +22,8 @@ class Settings:
 
         # App
         self.api_secret_key: str = os.getenv("API_SECRET_KEY")
+        self.admin_registration_code: Optional[str] = os.getenv("ADMIN_REGISTRATION_CODE")
+        self.access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
         self.backend_url: str = os.getenv("BACKEND_URL", "http://localhost:8000")
         self.frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
 

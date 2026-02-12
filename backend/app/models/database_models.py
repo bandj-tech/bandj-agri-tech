@@ -110,3 +110,13 @@ class SMSSession(Base):
     # Relationships
     farmer = relationship("Farmer", back_populates="sms_sessions")
     soil_test = relationship("SoilTest", back_populates="sms_sessions")
+
+class AdminUser(Base):
+    __tablename__ = "admin_users"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

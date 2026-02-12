@@ -1,11 +1,13 @@
-import { AppBar, Toolbar, Typography, Box, Avatar, IconButton } from "@mui/material";
+import { AppBar, Toolbar, Typography, Box, Avatar, IconButton, Button } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 
 type Props = {
   onMenuClick: () => void;
+  userEmail?: string;
+  onLogout?: () => void;
 };
 
-export default function Topbar({ onMenuClick }: Props) {
+export default function Topbar({ onMenuClick, userEmail, onLogout }: Props) {
   return (
     <AppBar
       position="sticky"
@@ -44,8 +46,22 @@ export default function Topbar({ onMenuClick }: Props) {
           Smart Soil Admin
         </Typography>
 
-        <Box display="flex" gap={2} alignItems="center" sx={{ pl: 1 }}>
+        <Box display="flex" gap={{ xs: 1, sm: 2 }} alignItems="center" sx={{ pl: 1 }}>
+          {userEmail && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ display: { xs: "none", sm: "block" }, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis" }}
+            >
+              {userEmail}
+            </Typography>
+          )}
           <Avatar sx={{ bgcolor: "#0f766e", color: "#fef9e7" }}>B&J</Avatar>
+          {onLogout && (
+            <Button variant="outlined" size="small" onClick={onLogout}>
+              Logout
+            </Button>
+          )}
         </Box>
       </Toolbar>
     </AppBar>

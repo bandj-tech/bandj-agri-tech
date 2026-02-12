@@ -71,11 +71,13 @@ backend/
 │   ├── __init__.py
 │   ├── main.py                 # FastAPI app setup, CORS, routers
 │   ├── api/
+│   │   ├── auth.py             # Admin register/login/me endpoints
 │   │   ├── admin.py            # Farmer & device management endpoints
 │   │   ├── soil.py             # Soil data upload & AI analysis
 │   │   └── sms.py              # SMS webhook & farmer interactions
 │   ├── core/
 │   │   ├── config.py           # Environment variables & settings
+│   │   ├── security.py         # Password hashing + JWT auth helpers
 │   │   └── database.py         # SQLAlchemy setup, SessionLocal
 │   ├── models/
 │   │   ├── database_models.py  # SQLAlchemy ORM models (Farmer, Device, SoilTest, etc.)
@@ -100,7 +102,69 @@ All endpoints use **JSON** for request/response bodies.
 
 ---
 
+### 🔐 **Auth Endpoints** - `/api/auth`
+
+#### 1️⃣ Register Admin
+
+**Endpoint:** `POST /api/auth/register`
+
+**Purpose:** Create admin account with email/password + protected 6-digit registration code
+
+**Request Body:**
+```json
+{
+  "email": "admin@example.com",
+  "password": "StrongPass123",
+  "registration_code": "123456"
+}
+```
+
+**Response (200):**
+```json
+{
+  "access_token": "jwt_token_here",
+  "token_type": "bearer",
+  "user": {
+    "id": "uuid",
+    "email": "admin@example.com",
+    "is_active": true,
+    "created_at": "2026-02-12T10:00:00"
+  }
+}
+```
+
+#### 2️⃣ Login Admin
+
+**Endpoint:** `POST /api/auth/login`
+
+**Request Body:**
+```json
+{
+  "email": "admin@example.com",
+  "password": "StrongPass123"
+}
+```
+
+**Response:** Same format as register (`access_token`, `token_type`, `user`)
+
+#### 3️⃣ Current Admin
+
+**Endpoint:** `GET /api/auth/me`
+
+**Headers Required:**
+```http
+Authorization: Bearer <access_token>
+```
+
+---
+
 ### 🌾 **Admin Endpoints** - `/api/admin`
+
+All `/api/admin/*` endpoints require an admin JWT token:
+
+```http
+Authorization: Bearer <admin_access_token>
+```
 
 #### 1️⃣ Create Farmer
 
@@ -392,27 +456,46 @@ Content-Type: application/json
 
 ## 🔐 Authentication
 
-### Device Token Authentication
+### 1) Admin JWT Authentication
 
-Used for IoT device endpoints like `/api/soil/upload`
+Used for all `/api/admin/*` endpoints.
+
+**How to get token:**
+1. Register: `POST /api/auth/register` (requires `registration_code`)
+2. Login: `POST /api/auth/login`
+3. Use returned `access_token` in header:
+
+```http
+Authorization: Bearer <admin_access_token>
+```
+
+### 2) Device Token Authentication
+
+Used for IoT upload endpoint `/api/soil/upload`.
 
 **How to use:**
 ```bash
 curl -X POST http://localhost:8000/api/soil/upload \
-  -H "Authorization: Bearer YOUR_API_TOKEN_HERE" \
+  -H "Authorization: Bearer YOUR_DEVICE_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{...soil data...}'
 ```
 
-**Token Source:** Generated when registering device via `/api/admin/devices` endpoint
-
-**Token Format:** URL-safe random string (44 characters)
-
-**Expiration:** Tokens don't expire (regenerate by registering new device if compromised)
+**Token Source:** Generated when registering device via `/api/admin/devices` endpoint.
 
 ---
 
 ## 🗄️ Database Schema
+
+### Admin Users Table
+```sql
+id (UUID, Primary Key)
+email (String, Unique)
+password_hash (String)
+is_active (Boolean)
+created_at (DateTime)
+updated_at (DateTime)
+```
 
 ### Farmers Table
 ```sql
@@ -501,6 +584,8 @@ TELERIVET_PROJECT_ID=your_project_id
 
 # App Configuration
 API_SECRET_KEY=dev-secret-key-12345
+ADMIN_REGISTRATION_CODE=123456
+ACCESS_TOKEN_EXPIRE_MINUTES=60
 BACKEND_URL=http://localhost:8000
 FRONTEND_URL=http://localhost:3000
 ```
@@ -584,13 +669,36 @@ const uploadSoilData = async (soilData) => {
 
 ## 🎯 Frontend Integration Guide
 
+### Step 0: Admin Login
+
+```javascript
+const adminLogin = async () => {
+  const response = await fetch('http://localhost:8000/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: 'admin@example.com',
+      password: 'StrongPass123'
+    })
+  });
+
+  const data = await response.json();
+  localStorage.setItem('adminToken', data.access_token);
+  return data;
+};
+```
+
 ### Step 1: Create a Farmer Account
 
 ```javascript
 const createFarmer = async (farmerData) => {
+  const adminToken = localStorage.getItem('adminToken');
   const response = await fetch('http://localhost:8000/api/admin/farmers', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Authorization': `Bearer ${adminToken}`,
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify({
       name: 'Julius Mwangi',
       phone_number: '256701234567',
@@ -608,9 +716,13 @@ const createFarmer = async (farmerData) => {
 
 ```javascript
 const registerDevice = async (farmerId) => {
+  const adminToken = localStorage.getItem('adminToken');
   const response = await fetch('http://localhost:8000/api/admin/devices', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Authorization': `Bearer ${adminToken}`,
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify({
       farmer_id: farmerId,
       device_id: 'SOIL-SENSOR-001',
@@ -664,7 +776,12 @@ const uploadSoilData = async (soilData) => {
 
 ```javascript
 const getRecommendations = async (farmerId) => {
-  const response = await fetch(`http://localhost:8000/api/admin/soil-tests/${farmerId}`);
+  const adminToken = localStorage.getItem('adminToken');
+  const response = await fetch(`http://localhost:8000/api/admin/soil-tests/${farmerId}`, {
+    headers: {
+      'Authorization': `Bearer ${adminToken}`
+    }
+  });
   const data = await response.json();
   
   // Access recommendations
@@ -714,6 +831,7 @@ chmod +x test_ai_complete.sh
 
 # Or use curl for individual endpoints
 curl -X POST http://localhost:8000/api/admin/farmers \
+  -H "Authorization: Bearer YOUR_ADMIN_JWT" \
   -H "Content-Type: application/json" \
   -d '{"name":"Test","phone_number":"256701234567","region":"Central","district":"Kampala"}'
 ```

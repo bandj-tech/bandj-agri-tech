@@ -3,9 +3,10 @@ from sqlalchemy.orm import Session
 from app.models.schemas import FarmerCreate, DeviceCreate
 from app.models.database_models import Farmer, Device
 from app.core.database import get_db
+from app.core.security import get_current_admin
 import secrets
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_admin)])
 
 @router.post("/farmers")
 async def create_farmer(farmer_data: FarmerCreate, db: Session = Depends(get_db)):
@@ -151,4 +152,3 @@ async def get_sms_logs(farmer_id: str, db: Session = Depends(get_db)):
         "status": l.status,
         "created_at": l.created_at
     } for l in sorted(logs, key=lambda x: x.created_at, reverse=True)]}
-
