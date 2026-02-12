@@ -1,6 +1,11 @@
-import { AppBar, Toolbar, Typography, Box, Avatar } from "@mui/material";
+import { AppBar, Toolbar, Typography, Box, Avatar, IconButton } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 
-export default function Topbar() {
+type Props = {
+  onMenuClick: () => void;
+};
+
+export default function Topbar({ onMenuClick }: Props) {
   return (
     <AppBar
       position="sticky"
@@ -13,6 +18,16 @@ export default function Topbar() {
       }}
     >
       <Toolbar>
+        <IconButton
+          edge="start"
+          color="inherit"
+          onClick={onMenuClick}
+          sx={{ mr: 1, display: { xs: "inline-flex", md: "none" } }}
+          aria-label="open navigation"
+        >
+          <MenuIcon />
+        </IconButton>
+
         <Typography
           variant="h6"
           sx={{
@@ -20,12 +35,16 @@ export default function Topbar() {
             fontWeight: 700,
             fontFamily: '"Playfair Display", "Times New Roman", serif',
             letterSpacing: 0.4,
+            fontSize: { xs: "1.05rem", sm: "1.25rem" },
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
-          Smart Soil — Admin
+          Smart Soil Admin
         </Typography>
 
-        <Box display="flex" gap={2} alignItems="center">
+        <Box display="flex" gap={2} alignItems="center" sx={{ pl: 1 }}>
           <Avatar sx={{ bgcolor: "#0f766e", color: "#fef9e7" }}>B&J</Avatar>
         </Box>
       </Toolbar>

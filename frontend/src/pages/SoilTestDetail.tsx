@@ -1,5 +1,5 @@
 import 'leaflet/dist/leaflet.css';
-import { Paper, Typography, Box, Grid, Divider, IconButton, Tooltip, Stack, Chip } from "@mui/material";
+import { Paper, Typography, Box, Divider, IconButton, Tooltip, Stack, Chip } from "@mui/material";
 import ThermostatIcon from "@mui/icons-material/Thermostat";
 import WaterDropIcon from "@mui/icons-material/WaterDrop";
 import ScienceIcon from "@mui/icons-material/Science";
@@ -76,8 +76,8 @@ export default function SoilTestDetail({ test }: { test: SoilTest }) {
 
   return (
     <Paper sx={{ p: 2 }}>
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+      <Box display="grid" gap={2} gridTemplateColumns={{ xs: "1fr", md: "1fr 1fr" }}>
+        <Box>
           <Typography variant="h6">Soil Test — {new Date(test.timestamp).toLocaleString()}</Typography>
           <Typography color="text.secondary" gutterBottom>{test.location_name || "Location not provided"}</Typography>
 
@@ -142,24 +142,33 @@ export default function SoilTestDetail({ test }: { test: SoilTest }) {
                   <XAxis dataKey="name" />
                   <YAxis />
                   <ReTooltip
-                    formatter={(value: number, _name, props) => {
+                    formatter={(value: number | string | undefined, _name, props) => {
                       const payload = props?.payload as { missing?: boolean } | undefined;
-                      return payload?.missing ? ["Not recorded", "Value"] : [value, "Value"];
+                      if (payload?.missing) return ["Not recorded", "Value"];
+                      const numeric = typeof value === "number" ? value : Number(value ?? 0);
+                      return [numeric, "Value"];
                     }}
                   />
                   <Bar dataKey="value">
                     {npkChart.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} opacity={entry.missing ? 0.25 : 0.9} />
                     ))}
-                    <LabelList dataKey="value" position="top" formatter={(val: number) => (val === 0 ? "—" : val.toFixed(1))} />
+                    <LabelList
+                      dataKey="value"
+                      position="top"
+                      formatter={(val) => {
+                        const numeric = typeof val === "number" ? val : Number(val ?? 0);
+                        return numeric === 0 ? "—" : numeric.toFixed(1);
+                      }}
+                    />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </Box>
           </Stack>
-        </Grid>
+        </Box>
 
-        <Grid item xs={12} md={6}>
+        <Box>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="subtitle2">Location</Typography>
             <Tooltip title="Copy recommendation">
@@ -188,8 +197,8 @@ export default function SoilTestDetail({ test }: { test: SoilTest }) {
           <Box mt={1}>
             <RecommendationCard recommendation={test.recommendations?.[0] ?? { id: "n/a", recommendation_type: "none", content: "No recommendation available." }} />
           </Box>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Paper>
   );
 }

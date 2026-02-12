@@ -10,6 +10,8 @@ import {
   Stack,
   CircularProgress,
   Snackbar,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { createFarmer } from "../api/mockApi";
 import type { Farmer } from "../types";
@@ -17,6 +19,8 @@ import type { Farmer } from "../types";
 type Props = { open: boolean; onClose: () => void; onCreated?: (farmer: Farmer) => void };
 
 export default function CreateFarmerDialog({ open, onClose, onCreated }: Props) {
+  const theme = useTheme();
+  const fullScreenDialog = useMediaQuery(theme.breakpoints.down("sm"));
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [region, setRegion] = useState("");
@@ -66,6 +70,7 @@ export default function CreateFarmerDialog({ open, onClose, onCreated }: Props) 
         onClose={handleClose}
         fullWidth
         maxWidth="sm"
+        fullScreen={fullScreenDialog}
         PaperProps={{
           sx: {
             borderRadius: 3,

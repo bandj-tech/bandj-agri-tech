@@ -14,6 +14,8 @@ import {
   IconButton,
   Tooltip,
   Skeleton,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { getSoilTests, getSMSLogs, getFarmers, getFarmerDevices } from "../api/mockApi";
@@ -46,6 +48,8 @@ export default function FarmerDetail() {
     queryKey: ["farmers"],
     queryFn: getFarmers,
   });
+  const theme = useTheme();
+  const fullScreenDialog = useMediaQuery(theme.breakpoints.down("sm"));
 
   const farmer = useMemo(() => farmersData?.farmers?.find((f) => f.id === id) ?? null, [farmersData, id]);
 
@@ -65,15 +69,22 @@ export default function FarmerDetail() {
             </Typography>
             <Typography color="text.secondary">Profile, soil tests, and SMS activity.</Typography>
           </Box>
-          <Stack direction="row" spacing={1}>
-            <Button variant="contained" onClick={() => setRegisterOpen(true)}>Register Device</Button>
+          <Stack direction="row" spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
+            <Button variant="contained" onClick={() => setRegisterOpen(true)} sx={{ width: { xs: "100%", sm: "auto" } }}>Register Device</Button>
           </Stack>
         </Stack>
       )}
     >
 
-      <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start", flexWrap: "wrap" }}>
-        <Box sx={{ width: { xs: "100%", md: 440 } }}>
+      <Box
+        sx={{
+          display: "grid",
+          gap: 2,
+          gridTemplateColumns: { xs: "1fr", lg: "420px minmax(0, 1fr)" },
+          alignItems: "start",
+        }}
+      >
+        <Box sx={{ width: "100%" }}>
           <Paper sx={{ p: 2, mb: 2, border: "1px solid #eadfce", borderRadius: 2 }}>
             <Stack direction="row" spacing={2} alignItems="center">
               <Avatar sx={{ bgcolor: "primary.main" }}>{farmer?.name?.[0] ?? "F"}</Avatar>
@@ -86,7 +97,7 @@ export default function FarmerDetail() {
             <Typography variant="subtitle2">Location</Typography>
             <Typography>{farmer ? `${farmer.region} — ${farmer.district}` : "—"}</Typography>
             <Divider sx={{ my: 2 }} />
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
               <Typography variant="subtitle2">PIN</Typography>
               <Typography sx={{ fontWeight: 600 }}>{farmer?.pin ?? "—"}</Typography>
               <Tooltip title="Copy PIN">
@@ -113,7 +124,7 @@ export default function FarmerDetail() {
                         <strong>SIM Number:</strong> {device.sim_number}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Registered: {new Date(device.created_at).toLocaleString()}
+                        Registered: {device.created_at ? new Date(device.created_at).toLocaleString() : "—"}
                       </Typography>
                     </Box>
                   ))}
@@ -132,9 +143,9 @@ export default function FarmerDetail() {
           </Paper>
         </Box>
 
-        <Box sx={{ flex: 1, minWidth: 360 }}>
+        <Box sx={{ minWidth: 0, width: "100%" }}>
           <Paper sx={{ p: 2, border: "1px solid #eadfce", borderRadius: 2 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={0.5} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }}>
               <Typography variant="subtitle2">Soil Tests</Typography>
               <Typography color="text.secondary">{testsLoading ? "..." : (testsData?.tests?.length ?? 0)} total</Typography>
             </Stack>
@@ -164,7 +175,7 @@ export default function FarmerDetail() {
 
       <DeviceRegistration open={registerOpen} onClose={() => setRegisterOpen(false)} farmerId={id} />
 
-      <Dialog open={!!selectedTest} onClose={() => setSelectedTest(null)} maxWidth="md" fullWidth>
+      <Dialog open={!!selectedTest} onClose={() => setSelectedTest(null)} maxWidth="md" fullWidth fullScreen={fullScreenDialog}>
         <DialogTitle>Soil Test Detail</DialogTitle>
         <DialogContent>
           {selectedTest && (

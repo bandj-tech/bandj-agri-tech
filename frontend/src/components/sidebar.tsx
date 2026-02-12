@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Drawer,
   List,
@@ -12,26 +11,26 @@ import {
 } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const drawerWidth = 260;
 
-export default function Sidebar() {
+type Props = {
+  mobileOpen: boolean;
+  onClose: () => void;
+};
+
+export default function Sidebar({ mobileOpen, onClose }: Props) {
   const nav = useNavigate();
-  return (
-    <Drawer
-      variant="permanent"
-      open
-      sx={{
-        width: drawerWidth,
-        "& .MuiDrawer-paper": {
-          width: drawerWidth,
-          boxSizing: "border-box",
-          borderRight: 0,
-          bgcolor: "#f6f1e7",
-        },
-      }}
-    >
+  const location = useLocation();
+
+  const goTo = (path: string) => {
+    nav(path);
+    onClose();
+  };
+
+  const content = (
+    <>
       <Toolbar sx={{ borderBottom: "1px solid #e7dcc9" }}>
         <Box display="flex" gap={2} alignItems="center">
           <Avatar sx={{ bgcolor: "#0f766e", color: "#fef9e7" }}>B&J</Avatar>
@@ -48,7 +47,8 @@ export default function Sidebar() {
       </Toolbar>
       <List sx={{ mt: 1 }}>
         <ListItemButton
-          onClick={() => nav("/")}
+          selected={location.pathname === "/"}
+          onClick={() => goTo("/")}
           sx={{
             mx: 1,
             borderRadius: 2,
@@ -59,7 +59,8 @@ export default function Sidebar() {
           <ListItemText primary="Dashboard" />
         </ListItemButton>
         <ListItemButton
-          onClick={() => nav("/farmers")}
+          selected={location.pathname.startsWith("/farmers")}
+          onClick={() => goTo("/farmers")}
           sx={{
             mx: 1,
             borderRadius: 2,
@@ -70,6 +71,45 @@ export default function Sidebar() {
           <ListItemText primary="Farmers" />
         </ListItemButton>
       </List>
-    </Drawer>
+    </>
+  );
+
+  return (
+    <>
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={onClose}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: "block", md: "none" },
+          "& .MuiDrawer-paper": {
+            width: drawerWidth,
+            boxSizing: "border-box",
+            borderRight: 0,
+            bgcolor: "#f6f1e7",
+          },
+        }}
+      >
+        {content}
+      </Drawer>
+
+      <Drawer
+        variant="permanent"
+        open
+        sx={{
+          display: { xs: "none", md: "block" },
+          width: drawerWidth,
+          "& .MuiDrawer-paper": {
+            width: drawerWidth,
+            boxSizing: "border-box",
+            borderRight: 0,
+            bgcolor: "#f6f1e7",
+          },
+        }}
+      >
+        {content}
+      </Drawer>
+    </>
   );
 }

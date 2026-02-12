@@ -11,7 +11,8 @@ import {
   IconButton,
   InputAdornment,
   CircularProgress,
-  Snackbar,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { registerDevice } from "../api/mockApi";
 import { FiCopy } from "react-icons/fi";
@@ -20,6 +21,8 @@ import { useNotify } from "../contexts/NotificationProvider";
 type Props = { open: boolean; onClose: () => void; farmerId?: string };
 
 export default function DeviceRegistration({ open, onClose, farmerId }: Props) {
+  const theme = useTheme();
+  const fullScreenDialog = useMediaQuery(theme.breakpoints.down("sm"));
   const [deviceId, setDeviceId] = useState("");
   const [sim, setSim] = useState("");
   const [token, setToken] = useState<string | null>(null);
@@ -67,6 +70,7 @@ export default function DeviceRegistration({ open, onClose, farmerId }: Props) {
         onClose={handleClose}
         fullWidth
         maxWidth="sm"
+        fullScreen={fullScreenDialog}
         PaperProps={{
           sx: {
             borderRadius: 3,
