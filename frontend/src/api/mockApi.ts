@@ -1,6 +1,8 @@
 import type { AuthResponse, Farmer, SoilTest, SMSLog, Device, AdminUser } from "../types";
 
-const BASE = (import.meta as any).env?.VITE_BACKEND_URL ?? "http://localhost:8000";
+const BASE =
+  (import.meta as any).env?.VITE_BACKEND_URL ??
+  "https://bandj-agri-tech.onrender.com";
 const ADMIN_TOKEN_KEY = "admin_access_token";
 
 export function getAdminToken() {
