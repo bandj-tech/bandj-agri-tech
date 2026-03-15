@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Request, Depends
 from sqlalchemy.orm import Session
 from app.models.database_models import Farmer, SMSLog, SMSSession
 from app.core.database import get_db
+from app.core.config import settings
 from app.services.weather_service import weather_service
 from app.services.ai_agronomist import ai_agronomist
 from app.services.sms_service import sms_service
@@ -12,7 +13,17 @@ router = APIRouter()
 async def receive_sms(request: Request, db: Session = Depends(get_db)):
     """Webhook to receive SMS from Telerivet"""
 
-    payload = await request.json()
+    try:
+        payload = await request.json()
+    except Exception:
+        form = await request.form()
+        payload = dict(form)
+
+    # Verify Telerivet webhook secret when configured
+    if settings.telerivet_webhook_secret:
+        secret = payload.get("secret")
+        if secret != settings.telerivet_webhook_secret:
+            raise HTTPException(status_code=403, detail="Invalid webhook secret")
 
     from_number = payload.get("from_number", "")
     content = payload.get("content", "").strip()

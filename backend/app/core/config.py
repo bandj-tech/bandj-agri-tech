@@ -16,6 +16,7 @@ class Settings:
         # Telerivet
         self.telerivet_api_key: str = os.getenv("TELERIVET_API_KEY")
         self.telerivet_project_id: str = os.getenv("TELERIVET_PROJECT_ID")
+        self.telerivet_webhook_secret: Optional[str] = os.getenv("TELERIVET_WEBHOOK_SECRET")
 
         # Weather
         self.openweather_api_key: str = os.getenv("OPENWEATHER_API_KEY")
