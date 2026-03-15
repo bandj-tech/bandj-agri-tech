@@ -8,9 +8,7 @@ class AIAgronomist:
 
     def __init__(self):
         self.api_key = settings.google_gemini_api_key
-        
-        if not self.api_key:
-            raise ValueError("GOOGLE_GEMINI_API_KEY must be set")
+        self.enabled = bool(self.api_key)
 
     def _create_system_prompt(self) -> str:
         """Base system prompt for AI agronomist"""
@@ -132,6 +130,8 @@ Be specific! Use locally available products in Uganda!"""
         """Generate response using Google Gemini REST API"""
 
         try:
+            if not self.enabled:
+                return "AI not configured. Set GOOGLE_GEMINI_API_KEY to enable recommendations."
             print(f"[DEBUG] Using Google Gemini REST API")
             full_prompt = self._create_system_prompt() + "\n\n" + prompt
             print(f"[DEBUG] Calling Gemini API...")

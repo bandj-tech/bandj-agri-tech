@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import soil, sms, admin, auth
 from app.core.database import engine, Base
+from app.core.config import settings
 from app.models.database_models import (
     Farmer, Device, SoilTest, Recommendation, SMSLog, SMSSession, AdminUser
 )
@@ -28,8 +29,10 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 
 @app.get("/")
 async def root():
-    return {"message": "Smart Soil Platform API", "status": "running", "database": "SQLite"}
+    db_label = "SQLite" if settings.database_url.startswith("sqlite") else "PostgreSQL"
+    return {"message": "Smart Soil Platform API", "status": "running", "database": db_label}
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "database": "connected"}
+    db_label = "SQLite" if settings.database_url.startswith("sqlite") else "PostgreSQL"
+    return {"status": "healthy", "database": db_label, "db_url_set": bool(settings.database_url)}

@@ -6,8 +6,15 @@ load_dotenv()
 
 class Settings:
     def __init__(self):
-        # Database - SQLite
-        self.database_url: str = os.getenv("DATABASE_URL", "sqlite:///./smart_soil.db")
+        # Database (SQLite default, optional Supabase Postgres)
+        self.database_url: str = os.getenv(
+            "DATABASE_URL",
+            os.getenv("SUPABASE_DB_URL", "sqlite:///./smart_soil.db"),
+        )
+
+        # Supabase (optional)
+        self.supabase_url: Optional[str] = os.getenv("SUPABASE_URL")
+        self.supabase_key: Optional[str] = os.getenv("SUPABASE_KEY")
 
         # Telerivet
         self.telerivet_api_key: str = os.getenv("TELERIVET_API_KEY")
