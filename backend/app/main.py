@@ -29,10 +29,8 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 
 @app.get("/")
 async def root():
-    db_label = "SQLite" if settings.database_url.startswith("sqlite") else "PostgreSQL"
-    return {"message": "Smart Soil Platform API", "status": "running", "database": db_label}
+    return {"message": "Smart Soil Platform API", "status": "running", "database": "PostgreSQL"}
 
 @app.get("/health")
 async def health():
-    db_label = "SQLite" if settings.database_url.startswith("sqlite") else "PostgreSQL"
-    return {"status": "healthy", "database": db_label, "db_url_set": bool(settings.database_url)}
+    return {"status": "healthy", "database": "PostgreSQL", "db_url_set": bool(settings.database_url)}

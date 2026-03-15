@@ -6,13 +6,10 @@ load_dotenv()
 
 class Settings:
     def __init__(self):
-        # Database (SQLite default, optional Supabase Postgres)
-        self.database_url: str = os.getenv(
-            "DATABASE_URL",
-            os.getenv("SUPABASE_DB_URL", "sqlite:///./smart_soil.db"),
-        )
+        # Database (Supabase Postgres only)
+        self.database_url: str = os.getenv("SUPABASE_DB_URL")
 
-        # Supabase (optional)
+        # Supabase
         self.supabase_url: Optional[str] = os.getenv("SUPABASE_URL")
         self.supabase_key: Optional[str] = os.getenv("SUPABASE_KEY")
 
