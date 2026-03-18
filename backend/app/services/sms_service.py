@@ -12,11 +12,32 @@ class TelerivetSMSService:
 
     async def send_sms(self, phone_number: str, message: str, farmer_id: Optional[str] = None, db: Optional[Session] = None) -> dict:
         """Send SMS via Telerivet"""
+        if not self.api_key or not self.project_id:
+            err = {"status": "error", "message": "TELERIVET_API_KEY or TELERIVET_PROJECT_ID not set"}
+            if db and farmer_id:
+                sms_log = SMSLog(
+                    farmer_id=farmer_id,
+                    direction="outbound",
+                    phone_number=phone_number,
+                    message=message,
+                    status="failed"
+                )
+                db.add(sms_log)
+                db.commit()
+            return err
+
         url = f"{self.base_url}/projects/{self.project_id}/messages/send"
 
-        # Ensure phone number has country code
-        if not phone_number.startswith("+"):
-            phone_number = f"+256{phone_number.lstrip('0')}"  # Uganda code
+        # Ensure phone number is E.164 with Uganda code
+        if phone_number.startswith("+"):
+            normalized = phone_number
+        elif phone_number.startswith("256"):
+            normalized = f"+{phone_number}"
+        elif phone_number.startswith("0"):
+            normalized = f"+256{phone_number.lstrip('0')}"
+        else:
+            normalized = f"+{phone_number}"
+        phone_number = normalized
 
         # Split long messages (SMS is 160 chars)
         messages = self._split_message(message)
@@ -35,7 +56,17 @@ class TelerivetSMSService:
                     auth=(self.api_key, "")
                 )
 
-            result = response.json()
+            try:
+                result = response.json()
+            except Exception:
+                result = {}
+
+            if response.status_code >= 400:
+                result = {
+                    "status": "failed",
+                    "http_status": response.status_code,
+                    "error": result or response.text
+                }
             results.append(result)
 
             # Log to database if db session provided
@@ -45,7 +76,7 @@ class TelerivetSMSService:
                     direction="outbound",
                     phone_number=phone_number,
                     message=msg,
-                    status=result.get("status"),
+                    status=result.get("status") or "unknown",
                     telerivet_id=result.get("id")
                 )
                 db.add(sms_log)
