@@ -13,11 +13,15 @@ router = APIRouter()
 async def receive_sms(request: Request, db: Session = Depends(get_db)):
     """Webhook to receive SMS from Telerivet"""
 
+    payload = {}
     try:
         payload = await request.json()
     except Exception:
-        form = await request.form()
-        payload = dict(form)
+        try:
+            form = await request.form()
+            payload = dict(form)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid webhook payload")
 
     # Verify Telerivet webhook secret when configured
     if settings.telerivet_webhook_secret:
