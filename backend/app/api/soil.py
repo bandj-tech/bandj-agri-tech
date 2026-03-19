@@ -122,7 +122,7 @@ async def upload_soil_data(
         weather_data["location"]
     )
 
-    await sms_service.send_sms(
+    sms_result = await sms_service.send_sms(
         data.phone_number,  # Use phone from device data
         sms_message,
         farmer.id,
@@ -134,6 +134,7 @@ async def upload_soil_data(
         "soil_test_id": soil_test_id,
         "location": weather_data["location"],
         "weather_summary": weather_data["forecast"]["summary"],
-        "message": "Data received, weather fetched, AI analyzed, SMS sent to farmer"
+        "message": "Data received, weather fetched, AI analyzed, SMS attempted",
+        "sms_result": sms_result
     }
 
