@@ -45,6 +45,10 @@ export async function getFarmers(): Promise<{ farmers: Farmer[] }> {
   return request(`/api/admin/farmers`);
 }
 
+export async function deleteFarmer(farmerId: string): Promise<{ status: string; message?: string }> {
+  return request(`/api/admin/farmers/${farmerId}`, { method: "DELETE" });
+}
+
 export async function createFarmer(payload: { name: string; phone_number: string; region: string; district: string; }): Promise<{ farmer: Farmer }> {
   return request(`/api/admin/farmers`, { method: "POST", body: JSON.stringify(payload) });
 }

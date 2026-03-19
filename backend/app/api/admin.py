@@ -54,6 +54,18 @@ async def list_farmers(db: Session = Depends(get_db)):
         "created_at": f.created_at
     } for f in farmers]}
 
+@router.delete("/farmers/{farmer_id}")
+async def delete_farmer(farmer_id: str, db: Session = Depends(get_db)):
+    """Delete a farmer and related records"""
+    farmer = db.query(Farmer).filter(Farmer.id == farmer_id).first()
+    if not farmer:
+        raise HTTPException(status_code=404, detail="Farmer not found")
+
+    db.delete(farmer)
+    db.commit()
+
+    return {"status": "success", "message": "Farmer deleted"}
+
 @router.post("/devices")
 async def register_device(device_data: DeviceCreate, db: Session = Depends(get_db)):
     """Register new device"""

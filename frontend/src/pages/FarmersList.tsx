@@ -10,6 +10,12 @@ import {
   Typography,
   Box,
   Button,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
   TextField,
   Select,
   MenuItem,
@@ -28,6 +34,8 @@ import { useFarmers } from "../hooks/useFarmers";
 import CreateFarmerDialog from "../components/CreateFarmerDialog";
 import { useQueryClient } from "@tanstack/react-query";
 import PageShell from "../components/PageShell";
+import { deleteFarmer } from "../api/mockApi";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 export default function FarmersList() {
   const nav = useNavigate();
@@ -38,6 +46,8 @@ export default function FarmersList() {
   const [search, setSearch] = useState("");
   const [region, setRegion] = useState<string>("all");
   const [createOpen, setCreateOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -68,6 +78,18 @@ export default function FarmersList() {
   };
 
   const paged = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      await deleteFarmer(deleteTarget.id);
+      qc.invalidateQueries({ queryKey: ["farmers"] });
+      setDeleteTarget(null);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <PageShell
@@ -130,6 +152,14 @@ export default function FarmersList() {
                 <Typography variant="caption" color="text.secondary">{f.created_at ? new Date(f.created_at).toLocaleString() : ""}</Typography>
                 <Box mt={0.5}>
                   <Button size="small" onClick={() => nav(`/farmers/${f.id}`)}>View details</Button>
+                  <Button
+                    size="small"
+                    color="error"
+                    onClick={() => setDeleteTarget({ id: f.id, name: f.name })}
+                    sx={{ ml: 1 }}
+                  >
+                    Delete
+                  </Button>
                 </Box>
               </CardContent>
             </Card>
@@ -150,6 +180,7 @@ export default function FarmersList() {
                 <TableCell>Region</TableCell>
                 <TableCell>District</TableCell>
                 <TableCell>Created</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -162,7 +193,7 @@ export default function FarmersList() {
                   <TableCell><Skeleton width="30%" /></TableCell>
                 </TableRow>
               ))}
-              {isError && <TableRow><TableCell colSpan={5}>Error loading farmers</TableCell></TableRow>}
+              {isError && <TableRow><TableCell colSpan={6}>Error loading farmers</TableCell></TableRow>}
               {paged.map((f) => (
                 <TableRow key={f.id} hover>
                   <TableCell onClick={() => nav(`/farmers/${f.id}`)} style={{ cursor: "pointer" }}>{f.name}</TableCell>
@@ -170,6 +201,15 @@ export default function FarmersList() {
                   <TableCell onClick={() => nav(`/farmers/${f.id}`)} style={{ cursor: "pointer" }}>{f.region}</TableCell>
                   <TableCell onClick={() => nav(`/farmers/${f.id}`)} style={{ cursor: "pointer" }}>{f.district}</TableCell>
                   <TableCell onClick={() => nav(`/farmers/${f.id}`)} style={{ cursor: "pointer" }}>{f.created_at ? new Date(f.created_at).toLocaleString() : ""}</TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      aria-label={`Delete ${f.name}`}
+                      color="error"
+                      onClick={() => setDeleteTarget({ id: f.id, name: f.name })}
+                    >
+                      <DeleteOutlineIcon />
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -186,6 +226,21 @@ export default function FarmersList() {
         onRowsPerPageChange={handleChangeRowsPerPage}
         rowsPerPageOptions={[5, 10, 25]}
       />
+
+      <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
+        <DialogTitle>Delete Farmer</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {deleteTarget ? `Delete ${deleteTarget.name}? This also removes devices, tests, and SMS logs.` : ""}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteTarget(null)} disabled={isDeleting}>Cancel</Button>
+          <Button onClick={confirmDelete} color="error" variant="contained" disabled={isDeleting}>
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </PageShell>
   );
 }
